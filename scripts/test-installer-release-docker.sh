@@ -53,10 +53,10 @@ live_inputs=$publication/releases/amd64/channels/v0.1-dev/live-media-inputs.json
 	echo "error: output already exists: $output" >&2
 	exit 1
 }
-[[ $(docker context show) == orbstack ]] || {
-	echo "error: Docker context must be orbstack" >&2
-	exit 1
-}
+qa_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+# shellcheck source=scripts/require-docker-context.sh
+source "$qa_root/scripts/require-docker-context.sh"
+volatoo_require_docker_context
 
 absolute_directory()
 {
@@ -68,7 +68,6 @@ publication=$(absolute_directory "$publication")
 trusted_key=$(cd -- "$(dirname -- "$trusted_key")" && pwd)/$(basename -- "$trusted_key")
 output_name=$(basename -- "$output")
 output_parent=$(cd -- "$(dirname -- "$output")" && pwd)
-qa_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 [[ $output_name != . && $output_name != .. ]] || {
 	echo "error: unsafe output directory name" >&2
 	exit 1

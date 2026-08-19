@@ -42,10 +42,10 @@ for input in "$iso" "$manifest" "$descriptor" "$signature" "$trusted_key"; do
 		exit 1
 	}
 done
-[[ $(docker context show) == orbstack ]] || {
-	echo "error: Docker context must be orbstack" >&2
-	exit 1
-}
+qa_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+# shellcheck source=scripts/require-docker-context.sh
+source "$qa_root/scripts/require-docker-context.sh"
+volatoo_require_docker_context
 absolute_file()
 {
 	printf '%s/%s\n' "$(cd -- "$(dirname -- "$1")" && pwd)" "$(basename -- "$1")"
@@ -56,7 +56,6 @@ manifest=$(absolute_file "$manifest")
 descriptor=$(absolute_file "$descriptor")
 signature=$(absolute_file "$signature")
 trusted_key=$(absolute_file "$trusted_key")
-qa_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 image=volatoo-live-iso-builder:0.1-dev
 docker build --platform linux/amd64 --tag "$image" \
 	--file "$volatoo_repo/image/live-iso/Dockerfile" "$volatoo_repo"

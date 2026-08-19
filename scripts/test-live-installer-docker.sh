@@ -47,7 +47,10 @@ for input in "$iso" "$manifest" "$state" "$descriptor" "$signature" "$trusted_ke
 	[[ -f $input && ! -L $input ]] || { echo "error: live-install input is missing or unsafe: $input" >&2; exit 1; }
 done
 [[ ! -e $output && ! -L $output ]] || { echo "error: output already exists or is unsafe" >&2; exit 1; }
-[[ $(docker context show) == orbstack ]] || { echo "error: Docker context must be orbstack" >&2; exit 1; }
+qa_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+# shellcheck source=scripts/require-docker-context.sh
+source "$qa_root/scripts/require-docker-context.sh"
+volatoo_require_docker_context
 
 absolute_file()
 {
@@ -61,7 +64,6 @@ descriptor=$(absolute_file "$descriptor")
 signature=$(absolute_file "$signature")
 trusted_key=$(absolute_file "$trusted_key")
 ssh_private_key=$(absolute_file "$ssh_private_key")
-qa_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 output_name=$(basename -- "$output")
 output_parent=$(cd -- "$(dirname -- "$output")" && pwd)
 [[ $output_name =~ ^[A-Za-z0-9._-]+\.img$ ]] || { echo "error: unsafe output name" >&2; exit 1; }
