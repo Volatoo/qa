@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Check shell sources
+        run: shellcheck scripts/*.sh
+
+      - name: Test Docker context policy
+        run: scripts/test-docker-context-policy.sh
+
+      - name: Check Python sources
+        run: python3 -m py_compile scripts/*.py
+
+      - name: Verify destructive-operation ordering
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          source = Path("scripts/test-live-installer-docker.sh").read_text()
+          verify = source.index('"$qa_root/scripts/verify-live-media-release-docker.sh"')
+          create = source.index('truncate -s 2G "$staging/target.img"')
+          if verify >= create:
+              raise SystemExit("target image is created before signed-media verification")
+          PY
